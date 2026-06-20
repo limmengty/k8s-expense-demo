@@ -3,7 +3,7 @@
 # Chart: ingress-nginx/ingress-nginx
 # ============================================================
 controller:
-  replicaCount: 2
+  replicaCount: 1
 
   # Disable admission webhook — removes the pre-sync certgen Job that gets stuck
   admissionWebhooks:
