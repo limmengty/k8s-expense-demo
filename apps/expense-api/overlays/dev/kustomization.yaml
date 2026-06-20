@@ -52,7 +52,7 @@ patches:
   - patch: |
       - op: replace
         path: /spec/externalName
-        value: "REPLACE_WITH_VM_IP"
+        value: "152.42.204.173"
     target:
       kind: Service
       name: postgres-service

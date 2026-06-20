@@ -15,7 +15,7 @@ metadata:
     app.kubernetes.io/component: database
 spec:
   type: ExternalName
-  externalName: REPLACE_WITH_VM_IP   # patched by overlay
+  externalName: 152.42.204.173   # patched by overlay
   ports:
     - name: postgres
       protocol: TCP
