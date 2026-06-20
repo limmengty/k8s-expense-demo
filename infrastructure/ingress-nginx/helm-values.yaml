@@ -1,0 +1,52 @@
+# ============================================================
+# NGINX Ingress Controller — Helm values for DigitalOcean DOKS
+# Chart: ingress-nginx/ingress-nginx
+# ============================================================
+controller:
+  replicaCount: 2
+
+  # DigitalOcean LoadBalancer for external traffic
+  service:
+    type: LoadBalancer
+    annotations:
+      service.beta.kubernetes.io/do-loadbalancer-name: "expense-lb"
+      service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
+      # Enable PROXY protocol if using DigitalOcean managed LB
+      # service.beta.kubernetes.io/do-loadbalancer-enable-proxy-protocol: "true"
+
+  # Config for CORS, timeouts, and forwarded headers
+  config:
+    use-forwarded-headers: "true"
+    compute-full-forwarded-for: "true"
+    proxy-body-size: "10m"
+    proxy-read-timeout: "60"
+    proxy-send-timeout: "60"
+
+  # Spread replicas across nodes
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+            labelSelector:
+              matchLabels:
+                app.kubernetes.io/name: ingress-nginx
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: false   # Enable when Prometheus is deployed
+
+  # PodDisruptionBudget for HA during node maintenance
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1

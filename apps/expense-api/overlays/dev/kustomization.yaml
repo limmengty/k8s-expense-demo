@@ -1,0 +1,65 @@
+# ============================================================
+# demok8s / apps/expense-api/overlays/dev/kustomization.yaml
+# Dev overlay — lower resources, debug logging
+# ============================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: expense-api-dev
+
+resources:
+  - ../../base
+
+# Image tag updated by CI via: kustomize edit set image
+images:
+  - name: mengty199/expense-api
+    newName: mengty199/expense-api
+    newTag: latest
+
+patches:
+  # Scale down for dev
+  - patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "100m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "256Mi"
+    target:
+      kind: Deployment
+      name: expense-api
+  # Patch Keycloak to dev instance
+  - patch: |
+      - op: replace
+        path: /data/KEYCLOAK_ISSUER_URI
+        value: "https://dev-keycloak.limmengty.com/realms/expense"
+      - op: replace
+        path: /data/KEYCLOAK_SERVER_URL
+        value: "https://dev-keycloak.limmengty.com"
+    target:
+      kind: ConfigMap
+      name: expense-api-configmap
+  # Patch ingress host for dev
+  - patch: |
+      - op: replace
+        path: /spec/rules/0/host
+        value: dev-expense-api.limmengty.com
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: dev-expense-api.limmengty.com
+    target:
+      kind: Ingress
+      name: expense-api-ingress
+
+  # Fix NetworkPolicy: allow ingress from expense-ui-dev (not expense-ui)
+  # kubernetes.io/metadata.name is auto-set by K8s to match the namespace name
+  - patch: |
+      - op: replace
+        path: /spec/ingress/1/from/0/namespaceSelector/matchLabels/kubernetes.io~1metadata.name
+        value: expense-ui-dev
+    target:
+      kind: NetworkPolicy
+      name: expense-api-netpol

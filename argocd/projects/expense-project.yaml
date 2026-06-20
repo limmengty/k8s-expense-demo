@@ -1,0 +1,83 @@
+---
+# ============================================================
+# demok8s / argocd/projects/expense-project.yaml
+# ArgoCD AppProject — scopes what this team can deploy
+# Apply: kubectl apply -f argocd/projects/expense-project.yaml -n argocd
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: expense
+  namespace: argocd
+  labels:
+    team: fullstack
+spec:
+  description: "Balancify (expense-api + expense-ui) application project"
+
+  # Allow only from this CD repo
+  sourceRepos:
+    - https://github.com/limmengty/k8s-expense-demo.git
+
+  # Allow deploying to expense namespaces only
+  destinations:
+    - namespace: "expense-api-dev"
+      server: https://kubernetes.default.svc
+    - namespace: "expense-api-staging"
+      server: https://kubernetes.default.svc
+    - namespace: "expense-api-prod"
+      server: https://kubernetes.default.svc
+    - namespace: "expense-ui-dev"
+      server: https://kubernetes.default.svc
+    - namespace: "expense-ui-staging"
+      server: https://kubernetes.default.svc
+    - namespace: "expense-ui-prod"
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+
+  namespaceResourceWhitelist:
+    - group: "apps"
+      kind: Deployment
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: ServiceAccount
+    - group: "networking.k8s.io"
+      kind: Ingress
+    - group: "networking.k8s.io"
+      kind: NetworkPolicy
+    - group: "autoscaling"
+      kind: HorizontalPodAutoscaler
+    - group: "policy"
+      kind: PodDisruptionBudget
+
+  # Prevent committing raw Secret manifests — use Sealed Secrets / ESO
+  namespaceResourceBlacklist:
+    - group: ""
+      kind: Secret
+
+  roles:
+    - name: developer
+      description: Can view and sync dev/staging apps
+      policies:
+        - p, proj:expense:developer, applications, get, expense/expense-api-dev, allow
+        - p, proj:expense:developer, applications, sync, expense/expense-api-dev, allow
+        - p, proj:expense:developer, applications, get, expense/expense-api-staging, allow
+        - p, proj:expense:developer, applications, sync, expense/expense-api-staging, allow
+        - p, proj:expense:developer, applications, get, expense/expense-ui-dev, allow
+        - p, proj:expense:developer, applications, sync, expense/expense-ui-dev, allow
+        - p, proj:expense:developer, applications, get, expense/expense-ui-staging, allow
+        - p, proj:expense:developer, applications, sync, expense/expense-ui-staging, allow
+      groups:
+        - expense-developers
+
+    - name: ops
+      description: Full access including prod sync
+      policies:
+        - p, proj:expense:ops, applications, *, expense/*, allow
+      groups:
+        - expense-ops

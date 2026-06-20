@@ -1,0 +1,36 @@
+---
+# ============================================================
+# demok8s / apps/expense-api/base/ingress.yaml
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: expense-api-ingress
+  namespace: expense-api
+  labels:
+    app.kubernetes.io/name: expense-api
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "*"
+    # TLS managed by cert-manager
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - expense-api.example.com       # patched per environment
+      secretName: expense-api-tls
+  rules:
+    - host: expense-api.example.com     # patched per environment
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: expense-api-service
+                port:
+                  name: http

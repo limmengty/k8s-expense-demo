@@ -1,0 +1,68 @@
+# ============================================================
+# demok8s / apps/expense-ui/overlays/dev/kustomization.yaml
+# Dev overlay — lower resources, dev domain, dev API
+# ============================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: expense-ui-dev
+
+resources:
+  - ../../base
+
+# Image tag updated by CI via: kustomize edit set image
+images:
+  - name: mengty199/expense-ui
+    newName: mengty199/expense-ui
+    newTag: latest
+
+patches:
+  # Scale down for dev
+  - patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "50m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "128Mi"
+    target:
+      kind: Deployment
+      name: expense-ui
+  # Patch config for dev environment
+  - patch: |
+      - op: replace
+        path: /data/NEXT_PUBLIC_API_URL
+        value: "https://dev-expense-api.limmengty.com"
+      - op: replace
+        path: /data/API_URL
+        value: "https://dev-expense-api.limmengty.com"
+      - op: replace
+        path: /data/AUTH_KEYCLOAK_ISSUER
+        value: "https://dev-keycloak.limmengty.com/realms/expense"
+    target:
+      kind: ConfigMap
+      name: expense-ui-configmap
+  # Patch ingress host for dev
+  - patch: |
+      - op: replace
+        path: /spec/rules/0/host
+        value: dev-expense.limmengty.com
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: dev-expense.limmengty.com
+    target:
+      kind: Ingress
+      name: expense-ui-ingress
+
+  # Fix NetworkPolicy: egress to expense-api-dev (not expense-api)
+  # kubernetes.io/metadata.name is auto-set by K8s to the actual namespace name
+  - patch: |
+      - op: replace
+        path: /spec/egress/1/to/0/namespaceSelector/matchLabels/kubernetes.io~1metadata.name
+        value: expense-api-dev
+    target:
+      kind: NetworkPolicy
+      name: expense-ui-netpol

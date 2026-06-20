@@ -1,0 +1,53 @@
+# ============================================================
+# ArgoCD Helm values — install once to bootstrap GitOps
+# helm repo add argo https://argoproj.github.io/argo-helm
+# helm upgrade --install argocd argo/argo-cd \
+#   --namespace argocd --create-namespace \
+#   --version 7.x.x \
+#   --values demok8s/argocd/bootstrap/helm-values.yaml
+# ============================================================
+global:
+  networkPolicy:
+    create: true
+
+server:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hostname: argocd.limmengty.com
+    tls: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+
+configs:
+  params:
+    server.insecure: "false"
+  cm:
+    # Enable Helm chart deployment
+    kustomize.enabled: "true"
+    helm.enabled: "true"
+  rbac:
+    policy.default: role:readonly
+    policy.csv: |
+      p, role:ops, applications, *, */*, allow
+      g, expense-ops, role:ops
+
+repoServer:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+applicationSet:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi

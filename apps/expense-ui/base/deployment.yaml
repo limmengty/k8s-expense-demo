@@ -1,0 +1,115 @@
+---
+# ============================================================
+# demok8s / apps/expense-ui/base/deployment.yaml
+# Next.js 16 / React 19 frontend — production-grade deployment
+# ============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: expense-ui
+  namespace: expense-ui
+  labels:
+    app.kubernetes.io/name: expense-ui
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: expense-platform
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+spec:
+  # Replicas managed by HPA — this is the starting count
+  replicas: 2
+  revisionHistoryLimit: 5
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: expense-ui
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0        # Zero-downtime deployment
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: expense-ui
+        app.kubernetes.io/component: frontend
+      annotations:
+        checksum/config: "placeholder"
+
+    spec:
+      serviceAccountName: expense-ui-sa
+      terminationGracePeriodSeconds: 30
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+
+      # Anti-affinity: spread across nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: expense-ui
+
+      containers:
+        - name: expense-ui
+          # image is patched per environment by kustomize
+          image: mengty199/expense-ui:latest
+          imagePullPolicy: Always
+
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+
+          envFrom:
+            - configMapRef:
+                name: expense-ui-configmap
+            - secretRef:
+                name: expense-ui-secret
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            # Next.js writes to .next cache dir at runtime — cannot use readOnly
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+
+      volumes:
+        - name: tmp
+          emptyDir: {}

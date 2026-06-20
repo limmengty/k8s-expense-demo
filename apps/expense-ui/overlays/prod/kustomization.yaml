@@ -1,0 +1,68 @@
+# ============================================================
+# demok8s / apps/expense-ui/overlays/prod/kustomization.yaml
+# Production overlay — full replicas, prod domain
+# ============================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: expense-ui-prod
+
+resources:
+  - ../../base
+
+images:
+  - name: mengty199/expense-ui
+    newName: mengty199/expense-ui
+    newTag: latest
+
+patches:
+  # Scale up for prod
+  - patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+    target:
+      kind: Deployment
+      name: expense-ui
+  # Production URLs
+  - patch: |
+      - op: replace
+        path: /data/NEXT_PUBLIC_API_URL
+        value: "https://expense-api.limmengty.com"
+      - op: replace
+        path: /data/API_URL
+        value: "https://expense-api.limmengty.com"
+    target:
+      kind: ConfigMap
+      name: expense-ui-configmap
+  # Production domain
+  - patch: |
+      - op: replace
+        path: /spec/rules/0/host
+        value: expense.limmengty.com
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: expense.limmengty.com
+    target:
+      kind: Ingress
+      name: expense-ui-ingress
+  # Wider HPA range in prod
+  - patch: |
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+      - op: replace
+        path: /spec/maxReplicas
+        value: 20
+    target:
+      kind: HorizontalPodAutoscaler
+      name: expense-ui-hpa
+
+  # Fix NetworkPolicy: egress to expense-api-prod (not expense-api)
+  - patch: |
+      - op: replace
+        path: /spec/egress/1/to/0/namespaceSelector/matchLabels/kubernetes.io~1metadata.name
+        value: expense-api-prod
+    target:
+      kind: NetworkPolicy
+      name: expense-ui-netpol

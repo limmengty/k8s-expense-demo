@@ -1,0 +1,11 @@
+---
+# ============================================================
+# demok8s / apps/expense-ui/base/namespace.yaml
+# ============================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: expense-ui
+  labels:
+    app.kubernetes.io/name: expense-ui
+    managed-by: argocd

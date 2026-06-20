@@ -1,0 +1,47 @@
+---
+# ============================================================
+# demok8s / argocd/apps/infra-keycloak.yaml
+# Installs Keycloak via Bitnami Helm chart
+# NOTE: Create keycloak-secret and keycloak-db-secret before syncing
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-keycloak
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: keycloak
+    layer: infrastructure
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  sources:
+    - repoURL: https://charts.bitnami.com/bitnami
+      chart: keycloak
+      targetRevision: 22.x.x
+      helm:
+        valueFiles:
+          - $values/demok8s/infrastructure/keycloak/helm-values.yaml
+
+    - repoURL: https://github.com/limmengty/k8s-expense-demo.git
+      targetRevision: main
+      ref: values
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: keycloak
+
+  syncPolicy:
+    automated:
+      prune: false         # Don't auto-prune Keycloak (stateful)
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas

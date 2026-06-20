@@ -1,0 +1,88 @@
+# ============================================================
+# demok8s / apps/expense-api/overlays/prod/kustomization.yaml
+# Production overlay — full replicas, strict limits
+# ============================================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: expense-api-prod
+
+resources:
+  - ../../base
+
+images:
+  - name: mengty199/expense-api
+    newName: mengty199/expense-api
+    newTag: latest
+
+patches:
+  # Scale up for prod
+  - patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 3
+    target:
+      kind: Deployment
+      name: expense-api
+
+  # Disable in-cluster Postgres — prod uses DigitalOcean Managed PostgreSQL
+  # Set replicas: 0 to keep manifest in git but stop running the in-cluster DB
+  - patch: |
+      - op: replace
+        path: /spec/replicas
+        value: 0
+    target:
+      kind: Deployment
+      name: postgres
+
+  # Point to DO Managed PostgreSQL (fill in your actual host after provisioning via DO console)
+  # Connection string format: jdbc:postgresql://<host>:25060/<db>?sslmode=require
+  - patch: |
+      - op: replace
+        path: /data/DATABASE_URL
+        value: "jdbc:postgresql://REPLACE_WITH_DO_MANAGED_PG_HOST:25060/expense_db?sslmode=require"
+    target:
+      kind: ConfigMap
+      name: expense-api-configmap
+
+  # Expand PVC to 20Gi for prod (in case managed DB is not yet set up)
+  - patch: |
+      - op: replace
+        path: /spec/resources/requests/storage
+        value: "20Gi"
+    target:
+      kind: PersistentVolumeClaim
+      name: postgres-pvc
+
+  # Production domain
+  - patch: |
+      - op: replace
+        path: /spec/rules/0/host
+        value: expense-api.limmengty.com
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: expense-api.limmengty.com
+    target:
+      kind: Ingress
+      name: expense-api-ingress
+
+  # Wider HPA range in prod
+  - patch: |
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+      - op: replace
+        path: /spec/maxReplicas
+        value: 20
+    target:
+      kind: HorizontalPodAutoscaler
+      name: expense-api-hpa
+
+  # Fix NetworkPolicy: allow ingress from expense-ui-prod (not expense-ui)
+  - patch: |
+      - op: replace
+        path: /spec/ingress/1/from/0/namespaceSelector/matchLabels/kubernetes.io~1metadata.name
+        value: expense-ui-prod
+    target:
+      kind: NetworkPolicy
+      name: expense-api-netpol

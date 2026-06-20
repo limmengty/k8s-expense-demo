@@ -1,0 +1,50 @@
+---
+# ============================================================
+# demok8s / apps/expense-api/base/networkpolicy.yaml
+# Restrict pod-to-pod traffic to only what is necessary
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: expense-api-netpol
+  namespace: expense-api
+  labels:
+    app.kubernetes.io/name: expense-api
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: expense-api
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic from ingress-nginx
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 8080
+    # Allow SSR calls from expense-ui namespace
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: expense-ui
+      ports:
+        - port: 8080
+  egress:
+    # Allow DNS
+    - ports:
+        - port: 53
+          protocol: UDP
+    # Allow outbound to postgres
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: postgres
+      ports:
+        - port: 5432
+    # Allow outbound to Keycloak (HTTPS)
+    - ports:
+        - port: 443
+          protocol: TCP

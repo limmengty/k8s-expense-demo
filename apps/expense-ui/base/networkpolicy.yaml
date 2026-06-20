@@ -1,0 +1,45 @@
+---
+# ============================================================
+# demok8s / apps/expense-ui/base/networkpolicy.yaml
+# ============================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: expense-ui-netpol
+  namespace: expense-ui
+  labels:
+    app.kubernetes.io/name: expense-ui
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: expense-ui
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow traffic from ingress-nginx only
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - port: 3000
+  egress:
+    # Allow DNS
+    - ports:
+        - port: 53
+          protocol: UDP
+    # Allow SSR calls to expense-api pod port (8080)
+    # Cilium on DOKS evaluates egress NetworkPolicy after DNAT,
+    # so the pod port (8080) must be allowed, not the service port (80)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: expense-api
+      ports:
+        - port: 8080
+          protocol: TCP
+    # Allow outbound HTTPS to Keycloak and external services
+    - ports:
+        - port: 443
+          protocol: TCP

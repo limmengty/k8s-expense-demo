@@ -1,0 +1,70 @@
+# ============================================================
+# Keycloak — Helm values for DigitalOcean DOKS
+# Chart: bitnami/keycloak
+# Realm: expense (imported at startup via KC_IMPORT_REALM)
+# ============================================================
+auth:
+  adminUser: admin
+  # adminPassword set via external secret (keycloak-secret)
+  existingSecret: keycloak-secret
+  existingSecretKey: admin-password
+
+# PostgreSQL (separate deployment — use existing RDS/DOKS PG for prod)
+postgresql:
+  enabled: true
+  auth:
+    username: keycloak
+    database: keycloak
+    existingSecret: keycloak-db-secret
+    secretKeys:
+      adminPasswordKey: postgres-password
+      userPasswordKey: password
+
+# Production mode (HTTPS required)
+production: true
+
+# TLS terminated at ingress — Keycloak serves HTTP internally
+tls:
+  enabled: false
+
+ingress:
+  enabled: true
+  ingressClassName: nginx
+  hostname: keycloak.limmengty.com
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "128k"
+    nginx.ingress.kubernetes.io/proxy-buffers-number: "4"
+  tls: true
+
+# Keycloak env — issuer URL must match what API and UI use
+extraEnvVars:
+  - name: KC_HOSTNAME
+    value: keycloak.limmengty.com
+  - name: KC_HOSTNAME_STRICT
+    value: "false"
+  - name: KC_PROXY
+    value: edge
+
+# Import realm on startup (mounts the expense-realm.yml ConfigMap)
+extraVolumes:
+  - name: realm-config
+    configMap:
+      name: keycloak-realm-config
+
+extraVolumeMounts:
+  - name: realm-config
+    mountPath: /opt/bitnami/keycloak/data/import
+    readOnly: true
+
+extraEnvVarsSecret: keycloak-secret
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+replicaCount: 2

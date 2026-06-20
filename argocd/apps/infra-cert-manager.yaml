@@ -1,0 +1,48 @@
+---
+# ============================================================
+# demok8s / argocd/apps/infra-cert-manager.yaml
+# Installs cert-manager via Helm + applies ClusterIssuers
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-cert-manager
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: cert-manager
+    layer: infrastructure
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  sources:
+    # Source 1: Helm chart for cert-manager
+    - repoURL: https://charts.jetstack.io
+      chart: cert-manager
+      targetRevision: v1.16.x
+      helm:
+        values: |
+          installCRDs: true
+          replicaCount: 2
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+
+    # Source 2: ClusterIssuers from this CD repo
+    - repoURL: https://github.com/limmengty/k8s-expense-demo.git
+      targetRevision: main
+      path: demok8s/infrastructure/cert-manager
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true    # required for cert-manager CRDs

@@ -1,0 +1,22 @@
+---
+# ============================================================
+# demok8s / apps/expense-api/base/postgres-service.yaml
+# PostgreSQL internal ClusterIP service
+# ============================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: expense-api
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/component: database
+spec:
+  selector:
+    app.kubernetes.io/name: postgres
+  ports:
+    - name: postgres
+      protocol: TCP
+      port: 5432
+      targetPort: postgres
+  type: ClusterIP

@@ -1,0 +1,48 @@
+---
+# ============================================================
+# demok8s / argocd/apps/expense-api-prod.yaml
+# ArgoCD Application — expense-api production
+# MANUAL SYNC ONLY — no automated deployment to production
+# Apply: kubectl apply -f argocd/apps/expense-api-prod.yaml -n argocd
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: expense-api-prod
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: expense-api
+    environment: prod
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: expense
+
+  source:
+    repoURL: https://github.com/limmengty/k8s-expense-demo.git
+    targetRevision: main
+    path: demok8s/apps/expense-api/overlays/prod
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: expense-api-prod
+
+  # No automated sync for production — ops team must manually trigger
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+      - ApplyOutOfSyncOnly=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas

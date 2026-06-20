@@ -1,0 +1,21 @@
+---
+# ============================================================
+# demok8s / apps/expense-api/base/configmap.yaml
+# Non-sensitive configuration — safe to commit
+# ============================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: expense-api-configmap
+  namespace: expense-api
+  labels:
+    app.kubernetes.io/name: expense-api
+data:
+  DATABASE_URL: "jdbc:postgresql://postgres-service:5432/expense_db"
+  DATABASE_USERNAME: "expense_user"
+  KEYCLOAK_ISSUER_URI: "https://keycloak.limmengty.com/realms/expense"
+  KEYCLOAK_SERVER_URL: "https://keycloak.limmengty.com"
+  KEYCLOAK_REALM: "expense"
+  KEYCLOAK_CLIENT_ID: "expense-api"
+  # JVM tuning: respect container memory limits, faster startup entropy
+  JAVA_OPTS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"

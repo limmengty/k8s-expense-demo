@@ -1,0 +1,33 @@
+---
+# ============================================================
+# demok8s / argocd/bootstrap/root-app.yaml
+# App of Apps — root Application that manages ALL other ArgoCD resources.
+# Apply ONCE after ArgoCD is installed:
+#   kubectl apply -f demok8s/argocd/bootstrap/root-app.yaml -n argocd
+# After this, ArgoCD manages itself via GitOps.
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-app
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/limmengty/k8s-expense-demo.git
+    targetRevision: main
+    path: demok8s/argocd    # manages apps/, projects/, applicationsets/
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

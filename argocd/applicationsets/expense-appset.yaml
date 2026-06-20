@@ -1,0 +1,66 @@
+---
+# ============================================================
+# demok8s / argocd/applicationsets/expense-appset.yaml
+# ApplicationSet — generates dev + staging apps for both components
+# Prod is managed by individual Application manifests (manual sync)
+# Apply: kubectl apply -f argocd/applicationsets/expense-appset.yaml -n argocd
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: expense-appset
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          - list:
+              elements:
+                - component: expense-api
+                  basePath: demok8s/apps/expense-api/overlays
+                - component: expense-ui
+                  basePath: demok8s/apps/expense-ui/overlays
+          - list:
+              elements:
+                - environment: dev
+                - environment: staging
+
+  template:
+    metadata:
+      name: "{{component}}-{{environment}}"
+      namespace: argocd
+      labels:
+        app.kubernetes.io/name: "{{component}}"
+        environment: "{{environment}}"
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: expense
+      source:
+        repoURL: https://github.com/limmengty/k8s-expense-demo.git
+        targetRevision: main
+        path: "{{basePath}}/{{environment}}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{component}}-{{environment}}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+          allowEmpty: false
+        syncOptions:
+          - CreateNamespace=true
+          - PrunePropagationPolicy=foreground
+          - PruneLast=true
+          - ApplyOutOfSyncOnly=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 5s
+            factor: 2
+            maxDuration: 3m
+      ignoreDifferences:
+        - group: apps
+          kind: Deployment
+          jsonPointers:
+            - /spec/replicas

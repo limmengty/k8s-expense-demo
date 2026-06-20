@@ -1,0 +1,18 @@
+---
+# ============================================================
+# demok8s / apps/expense-api/base/pdb.yaml
+# PodDisruptionBudget — guarantee min availability during
+# node maintenance or rolling updates
+# ============================================================
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: expense-api-pdb
+  namespace: expense-api
+  labels:
+    app.kubernetes.io/name: expense-api
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: expense-api

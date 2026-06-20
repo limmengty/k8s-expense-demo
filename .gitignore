@@ -1,0 +1,27 @@
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+crash.log
+
+# Secrets — NEVER commit real secrets
+*.secret.yaml
+*-secret.yaml
+!*.template
+.env
+.env.*
+kubeconfig
+*.pem
+*.key
+
+# Sealed Secrets output (commit these — they're safe)
+# sealed-*.yaml   <-- intentionally NOT ignored
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
