@@ -39,9 +39,6 @@ patches:
       - op: replace
         path: /data/API_URL
         value: "https://dev-expense-api.limmengty.com"
-      - op: replace
-        path: /data/AUTH_KEYCLOAK_ISSUER
-        value: "https://dev-keycloak.limmengty.com/realms/expense"
     target:
       kind: ConfigMap
       name: expense-ui-configmap

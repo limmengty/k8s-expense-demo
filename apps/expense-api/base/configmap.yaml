@@ -1,8 +1,4 @@
 ---
-# ============================================================
-# demok8s / apps/expense-api/base/configmap.yaml
-# Non-sensitive configuration — safe to commit
-# ============================================================
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -11,18 +7,16 @@ metadata:
   labels:
     app.kubernetes.io/name: expense-api
 data:
-  # Spring Boot datasource
-  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres-service:5432/expense_db"
-  SPRING_DATASOURCE_USERNAME: "postgres"
-  SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
-  SPRING_JPA_DATABASE_PLATFORM: "org.hibernate.dialect.PostgreSQLDialect"
-  # Legacy keys (expense-api reads these directly)
+  # Matches application.yml: ${DATABASE_URL}
   DATABASE_URL: "jdbc:postgresql://postgres-service:5432/expense_db"
+  # Matches application.yml: ${DATABASE_USERNAME:postgres}
   DATABASE_USERNAME: "postgres"
-  # Keycloak / Spring Security OAuth2
+  # Matches application.yml: ${KEYCLOAK_ISSUER_URI} — used for BOTH jwt.issuer-uri AND keycloak.issuer-uri
   KEYCLOAK_ISSUER_URI: "https://keycloak.limmengty.com/realms/expense"
+  # Matches application.yml: ${KEYCLOAK_SERVER_URL}
   KEYCLOAK_SERVER_URL: "https://keycloak.limmengty.com"
+  # Matches application.yml: ${KEYCLOAK_REALM:expense}
   KEYCLOAK_REALM: "expense"
+  # Matches application.yml: ${KEYCLOAK_CLIENT_ID:expense-api}
   KEYCLOAK_CLIENT_ID: "expense-api"
-  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://keycloak.limmengty.com/realms/expense"
   JAVA_OPTS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"

@@ -1,10 +1,4 @@
 ---
-# ============================================================
-# demok8s / apps/expense-ui/base/configmap.yaml
-# Non-sensitive runtime configuration
-# NOTE: NEXT_PUBLIC_* vars are baked in at Docker build time.
-# These configmap values are for server-side / SSR configuration.
-# ============================================================
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,11 +7,8 @@ metadata:
   labels:
     app.kubernetes.io/name: expense-ui
 data:
-  # Public API URL — baked into the JS bundle at build time (see Dockerfile ARG NEXT_PUBLIC_API_URL)
-  # Also readable at runtime for server-side components in Next.js standalone mode
-  NEXT_PUBLIC_API_URL: "https://expense-api.example.com"    # patched per environment
-  # Server-side API URL — used by SSR / API routes inside the Node.js process
-  API_URL: "https://expense-api.example.com"                # patched per environment
-  # Auth.js v5 issuer (Keycloak realm)
-  AUTH_KEYCLOAK_ISSUER: "https://keycloak.limmengty.com/realms/expense"
+  # Matches .env.local: NEXT_PUBLIC_API_URL — patched per environment by overlay
+  NEXT_PUBLIC_API_URL: "https://expense-api.limmengty.com"
+  # Matches .env.local: API_URL (server-side SSR) — patched per environment by overlay
+  API_URL: "https://expense-api.limmengty.com"
   NODE_ENV: "production"

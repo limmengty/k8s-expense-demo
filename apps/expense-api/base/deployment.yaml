@@ -74,7 +74,7 @@ spec:
             - secretRef:
                 name: expense-api-secret
           env:
-            - name: SPRING_DATASOURCE_PASSWORD
+            - name: DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: expense-api-secret
