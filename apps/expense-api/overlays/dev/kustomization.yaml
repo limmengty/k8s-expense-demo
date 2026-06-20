@@ -14,7 +14,7 @@ resources:
 images:
   - name: mengty199/expense-api
     newName: mengty199/expense-api
-    newTag: latest
+    newTag: main
 
 patches:
   # Scale down for dev
