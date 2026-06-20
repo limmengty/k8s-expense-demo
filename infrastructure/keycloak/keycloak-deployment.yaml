@@ -5,6 +5,8 @@ metadata:
   namespace: keycloak
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: keycloak
@@ -16,7 +18,7 @@ spec:
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:26.0
-          args: ["start-dev"]
+          args: ["start", "--optimized", "--http-enabled=true", "--hostname-strict=false"]
           ports:
             - containerPort: 8080
           env:
