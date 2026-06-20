@@ -1,7 +1,7 @@
 ---
 # ============================================================
 # Let's Encrypt staging issuer — test cert issuance without rate limits
-# Use this first before switching to letsencrypt-prod
+# Uses HTTP-01 challenge via ingress-nginx (works with Cloudflare DNS)
 # ============================================================
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
@@ -14,9 +14,6 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-staging-key
     solvers:
-      # DNS-01 challenge required for wildcard cert *.limmengty.com
-      - dns01:
-          digitalocean:
-            tokenSecretRef:
-              name: digitalocean-dns-token
-              key: access-token
+      - http01:
+          ingress:
+            ingressClassName: nginx

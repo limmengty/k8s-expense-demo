@@ -1,7 +1,7 @@
 ---
 # ============================================================
 # Let's Encrypt production issuer — real trusted certificates
-# Only switch after staging issuer validates successfully
+# Uses HTTP-01 challenge via ingress-nginx (works with Cloudflare DNS)
 # ============================================================
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
@@ -14,8 +14,6 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod-key
     solvers:
-      - dns01:
-          digitalocean:
-            tokenSecretRef:
-              name: digitalocean-dns-token
-              key: access-token
+      - http01:
+          ingress:
+            ingressClassName: nginx
