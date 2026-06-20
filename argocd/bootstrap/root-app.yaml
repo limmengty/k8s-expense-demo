@@ -20,6 +20,8 @@ spec:
     repoURL: https://github.com/limmengty/k8s-expense-demo.git
     targetRevision: main
     path: argocd    # manages apps/, projects/, applicationsets/
+    directory:
+      recurse: true
 
   destination:
     server: https://kubernetes.default.svc
