@@ -38,8 +38,10 @@ spec:
                 secretKeyRef:
                   name: keycloak-secret
                   key: admin-password
-            - name: KC_PROXY
-              value: edge
+            - name: KC_PROXY_HEADERS
+              value: xforwarded
+            - name: KC_HTTP_ENABLED
+              value: "true"
             - name: KC_HOSTNAME
               value: keycloak.limmengty.com
             - name: KC_HOSTNAME_STRICT
