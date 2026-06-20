@@ -13,11 +13,28 @@ VM_IP="${1:-$(curl -s ifconfig.me)}"
 DOMAIN="keycloak.limmengty.com"
 EMAIL="nanokh9988@gmail.com"
 
-echo "==> Installing Docker..."
-apt-get update -qq
-apt-get install -y docker.io docker-compose-plugin curl ufw
+if command -v docker &>/dev/null; then
+  echo "==> Docker already installed, skipping..."
+else
+  echo "==> Installing Docker..."
+  apt-get update -qq
+  apt-get install -y ca-certificates curl gnupg ufw
 
-systemctl enable --now docker
+  install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+    | gpg --batch --yes --dearmor -o /etc/apt/keyrings/docker.gpg
+  chmod a+r /etc/apt/keyrings/docker.gpg
+
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+    > /etc/apt/sources.list.d/docker.list
+
+  apt-get update -qq
+  apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+  systemctl enable --now docker
+fi
 
 echo "==> Configuring firewall..."
 ufw default deny incoming
@@ -30,11 +47,23 @@ ufw allow from 10.0.0.0/8 to any port 5432
 ufw --force enable
 
 echo "==> Getting initial TLS certificate for ${DOMAIN}..."
-# Temporary nginx to answer HTTP-01 challenge
+mkdir -p /var/www/certbot /etc/letsencrypt
+
+# Temporary nginx to answer HTTP-01 challenge (mounts webroot so it can serve challenge files)
 docker run --rm -d --name nginx-temp \
   -p 80:80 \
-  -v /opt/stateful/nginx/keycloak.conf:/etc/nginx/conf.d/default.conf:ro \
-  nginx:alpine || true
+  -v /var/www/certbot:/var/www/certbot \
+  nginx:alpine sh -c 'mkdir -p /var/www/certbot && nginx -g "daemon off;" &
+cat > /etc/nginx/conf.d/default.conf << EOF
+server {
+  listen 80;
+  location /.well-known/acme-challenge/ { root /var/www/certbot; }
+  location / { return 200 "ok"; }
+}
+EOF
+nginx -s reload; wait'
+
+sleep 3
 
 docker run --rm \
   -v /etc/letsencrypt:/etc/letsencrypt \
