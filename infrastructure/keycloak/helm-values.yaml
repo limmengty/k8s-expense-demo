@@ -3,6 +3,11 @@
 # Chart: bitnami/keycloak
 # Realm: expense (imported at startup via KC_IMPORT_REALM)
 # ============================================================
+
+# Bitnami moved container images off Docker Hub — use their own registry
+global:
+  imageRegistry: registry.bitnami.com
+
 auth:
   adminUser: admin
   # adminPassword set via external secret (keycloak-secret)
