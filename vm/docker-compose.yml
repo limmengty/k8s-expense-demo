@@ -64,12 +64,13 @@ services:
       KC_HTTP_ENABLED: "true"
       KC_HOSTNAME: keycloak.limmengty.com
       KC_HOSTNAME_STRICT: "false"
+      KC_HEALTH_ENABLED: "true"
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8080/realms/master || exit 1"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/health/ready || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 10
-      start_period: 90s
+      start_period: 60s
 
   # ── Realm auto-import ─────────────────────────────────────
   # Runs once after Keycloak is healthy, imports expense-realm.yml
