@@ -8,40 +8,40 @@ kind: Kustomization
 namespace: expense-ui-staging
 
 resources:
-  - ../../base
+- ../../base
 
 images:
-  - name: mengty199/expense-ui
-    newName: mengty199/expense-ui
-    newTag: latest
+- name: mengty199/expense-ui
+  newName: mengty199/expense-ui
+  newTag: main
 
-patches:
-  - patch: |
-      - op: replace
-        path: /data/NEXT_PUBLIC_API_URL
-        value: "https://staging-expense-api.limmengty.com"
-      - op: replace
-        path: /data/API_URL
-        value: "https://staging-expense-api.limmengty.com"
-    target:
-      kind: ConfigMap
-      name: expense-ui-configmap
-  - patch: |
-      - op: replace
-        path: /spec/rules/0/host
-        value: staging-expense.limmengty.com
-      - op: replace
-        path: /spec/tls/0/hosts/0
-        value: staging-expense.limmengty.com
-    target:
-      kind: Ingress
-      name: expense-ui-ingress
 
   # Fix NetworkPolicy: egress to expense-api-staging (not expense-api)
-  - patch: |
-      - op: replace
-        path: /spec/egress/1/to/0/namespaceSelector/matchLabels/kubernetes.io~1metadata.name
-        value: expense-api-staging
-    target:
-      kind: NetworkPolicy
-      name: expense-ui-netpol
+patches:
+- patch: |
+    - op: replace
+      path: /data/NEXT_PUBLIC_API_URL
+      value: "https://staging-expense-api.limmengty.com"
+    - op: replace
+      path: /data/API_URL
+      value: "https://staging-expense-api.limmengty.com"
+  target:
+    kind: ConfigMap
+    name: expense-ui-configmap
+- patch: |
+    - op: replace
+      path: /spec/rules/0/host
+      value: staging-expense.limmengty.com
+    - op: replace
+      path: /spec/tls/0/hosts/0
+      value: staging-expense.limmengty.com
+  target:
+    kind: Ingress
+    name: expense-ui-ingress
+- patch: |
+    - op: replace
+      path: /spec/egress/1/to/0/namespaceSelector/matchLabels/kubernetes.io~1metadata.name
+      value: expense-api-staging
+  target:
+    kind: NetworkPolicy
+    name: expense-ui-netpol
