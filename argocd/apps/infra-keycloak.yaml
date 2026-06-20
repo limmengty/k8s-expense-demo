@@ -23,7 +23,7 @@ spec:
       targetRevision: 22.x.x
       helm:
         valueFiles:
-          - $values/demok8s/infrastructure/keycloak/helm-values.yaml
+          - $values/infrastructure/keycloak/helm-values.yaml
 
     - repoURL: https://github.com/limmengty/k8s-expense-demo.git
       targetRevision: main

@@ -33,7 +33,7 @@ spec:
     # Source 2: ClusterIssuers from this CD repo
     - repoURL: https://github.com/limmengty/k8s-expense-demo.git
       targetRevision: main
-      path: demok8s/infrastructure/cert-manager
+      path: infrastructure/cert-manager
 
   destination:
     server: https://kubernetes.default.svc

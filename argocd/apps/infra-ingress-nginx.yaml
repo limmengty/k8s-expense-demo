@@ -24,7 +24,7 @@ spec:
       targetRevision: 4.11.x
       helm:
         valueFiles:
-          - $values/demok8s/infrastructure/ingress-nginx/helm-values.yaml
+          - $values/infrastructure/ingress-nginx/helm-values.yaml
 
     # Source 2: CD repo — provides $values reference for helm values file
     - repoURL: https://github.com/limmengty/k8s-expense-demo.git

@@ -74,7 +74,7 @@ expense-cluster-default-yyy Ready    <none>   2m    v1.30.x
 
 ```bash
 kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.11.0/install.yaml
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.11.0/manifests/install.yaml
 ```
 
 ### 2.2 Wait for ArgoCD server to be ready
@@ -371,7 +371,7 @@ kubectl get certificate -A
 argocd app delete root-app --cascade
 
 # Or manually:
-kubectl delete -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.11.0/install.yaml
+kubectl delete -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/v2.11.0/manifests/install.yaml
 
 # Delete the DOKS cluster entirely
 doctl kubernetes cluster delete expense-cluster

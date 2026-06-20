@@ -21,7 +21,7 @@ spec:
   source:
     repoURL: https://github.com/limmengty/k8s-expense-demo.git
     targetRevision: main
-    path: demok8s/apps/expense-api/overlays/prod
+    path: apps/expense-api/overlays/prod
 
   destination:
     server: https://kubernetes.default.svc

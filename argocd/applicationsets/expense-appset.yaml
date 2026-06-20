@@ -17,9 +17,9 @@ spec:
           - list:
               elements:
                 - component: expense-api
-                  basePath: demok8s/apps/expense-api/overlays
+                  basePath: apps/expense-api/overlays
                 - component: expense-ui
-                  basePath: demok8s/apps/expense-ui/overlays
+                  basePath: apps/expense-ui/overlays
           - list:
               elements:
                 - environment: dev
