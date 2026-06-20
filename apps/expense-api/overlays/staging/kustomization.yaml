@@ -8,30 +8,30 @@ kind: Kustomization
 namespace: expense-api-staging
 
 resources:
-  - ../../base
+- ../../base
 
 images:
-  - name: mengty199/expense-api
-    newName: mengty199/expense-api
-    newTag: latest
+- name: mengty199/expense-api
+  newName: mengty199/expense-api
+  newTag: main
 
-patches:
-  - patch: |
-      - op: replace
-        path: /spec/rules/0/host
-        value: staging-expense-api.limmengty.com
-      - op: replace
-        path: /spec/tls/0/hosts/0
-        value: staging-expense-api.limmengty.com
-    target:
-      kind: Ingress
-      name: expense-api-ingress
 
   # Fix NetworkPolicy: allow ingress from expense-ui-staging (not expense-ui)
-  - patch: |
-      - op: replace
-        path: /spec/ingress/1/from/0/namespaceSelector/matchLabels/kubernetes.io~1metadata.name
-        value: expense-ui-staging
-    target:
-      kind: NetworkPolicy
-      name: expense-api-netpol
+patches:
+- patch: |
+    - op: replace
+      path: /spec/rules/0/host
+      value: staging-expense-api.limmengty.com
+    - op: replace
+      path: /spec/tls/0/hosts/0
+      value: staging-expense-api.limmengty.com
+  target:
+    kind: Ingress
+    name: expense-api-ingress
+- patch: |
+    - op: replace
+      path: /spec/ingress/1/from/0/namespaceSelector/matchLabels/kubernetes.io~1metadata.name
+      value: expense-ui-staging
+  target:
+    kind: NetworkPolicy
+    name: expense-api-netpol
