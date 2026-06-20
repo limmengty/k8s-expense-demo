@@ -5,6 +5,10 @@
 controller:
   replicaCount: 2
 
+  # Disable admission webhook — removes the pre-sync certgen Job that gets stuck
+  admissionWebhooks:
+    enabled: false
+
   # DigitalOcean LoadBalancer for external traffic
   service:
     type: LoadBalancer
