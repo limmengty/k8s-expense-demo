@@ -20,10 +20,11 @@ postgresql:
       adminPasswordKey: postgres-password
       userPasswordKey: password
 
-# Production mode (HTTPS required)
-production: true
+# TLS terminated at ingress (nginx) — Keycloak serves HTTP internally.
+# Chart's production mode requires tls.enabled=true (internal TLS), which
+# conflicts with edge-termination. KC_PROXY=edge handles the security instead.
+production: false
 
-# TLS terminated at ingress — Keycloak serves HTTP internally
 tls:
   enabled: false
 
