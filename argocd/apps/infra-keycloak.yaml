@@ -18,7 +18,7 @@ spec:
   project: default
 
   sources:
-    - repoURL: registry-1.docker.io/bitnamicharts
+    - repoURL: oci://registry-1.docker.io/bitnamicharts
       chart: keycloak
       targetRevision: 22.x.x
       helm:

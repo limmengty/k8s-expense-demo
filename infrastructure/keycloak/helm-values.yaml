@@ -52,17 +52,6 @@ extraEnvVars:
   - name: KC_PROXY
     value: edge
 
-# Import realm on startup (mounts the expense-realm.yml ConfigMap)
-extraVolumes:
-  - name: realm-config
-    configMap:
-      name: keycloak-realm-config
-
-extraVolumeMounts:
-  - name: realm-config
-    mountPath: /opt/bitnami/keycloak/data/import
-    readOnly: true
-
 extraEnvVarsSecret: keycloak-secret
 
 resources:

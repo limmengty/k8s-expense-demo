@@ -15,8 +15,7 @@ images:
   newName: mengty199/expense-ui
   newTag: main
 
-
-  # Fix NetworkPolicy: egress to expense-api-staging (not expense-api)
+# Fix NetworkPolicy: egress to expense-api-staging (not expense-api)
 patches:
 - patch: |
     - op: replace

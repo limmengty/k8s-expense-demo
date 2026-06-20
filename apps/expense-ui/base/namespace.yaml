@@ -7,5 +7,6 @@ kind: Namespace
 metadata:
   name: expense-ui
   labels:
+    kubernetes.io/metadata.name: expense-ui
     app.kubernetes.io/name: expense-ui
     managed-by: argocd
