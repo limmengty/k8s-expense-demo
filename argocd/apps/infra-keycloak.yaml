@@ -1,7 +1,8 @@
 ---
 # ============================================================
 # demok8s / argocd/apps/infra-keycloak.yaml
-# Installs Keycloak via Bitnami Helm chart
+# Installs Keycloak + PostgreSQL using official public images
+# quay.io/keycloak/keycloak:26 + postgres:16-alpine
 # NOTE: Create keycloak-secret and keycloak-db-secret before syncing
 # ============================================================
 apiVersion: argoproj.io/v1alpha1
@@ -17,17 +18,10 @@ metadata:
 spec:
   project: default
 
-  sources:
-    - repoURL: oci://registry-1.docker.io/bitnamicharts
-      chart: keycloak
-      targetRevision: 22.x.x
-      helm:
-        valueFiles:
-          - $values/infrastructure/keycloak/helm-values.yaml
-
-    - repoURL: https://github.com/limmengty/k8s-expense-demo.git
-      targetRevision: main
-      ref: values
+  source:
+    repoURL: https://github.com/limmengty/k8s-expense-demo.git
+    targetRevision: main
+    path: infrastructure/keycloak
 
   destination:
     server: https://kubernetes.default.svc
@@ -35,7 +29,7 @@ spec:
 
   syncPolicy:
     automated:
-      prune: false         # Don't auto-prune Keycloak (stateful)
+      prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
