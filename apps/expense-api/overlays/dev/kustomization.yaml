@@ -31,17 +31,31 @@ patches:
     target:
       kind: Deployment
       name: expense-api
-  # Patch Keycloak to dev instance
+  # Patch DB URL to external VM and Keycloak to VM-hosted instance
   - patch: |
       - op: replace
         path: /data/KEYCLOAK_ISSUER_URI
-        value: "https://dev-keycloak.limmengty.com/realms/expense"
+        value: "https://keycloak.limmengty.com/realms/expense"
       - op: replace
         path: /data/KEYCLOAK_SERVER_URL
-        value: "https://dev-keycloak.limmengty.com"
+        value: "https://keycloak.limmengty.com"
+      - op: replace
+        path: /data/SPRING_DATASOURCE_URL
+        value: "jdbc:postgresql://postgres-service:5432/expense_db"
+      - op: replace
+        path: /data/DATABASE_URL
+        value: "jdbc:postgresql://postgres-service:5432/expense_db"
     target:
       kind: ConfigMap
       name: expense-api-configmap
+  # Point ExternalName service to VM IP (set your VM's public IP here)
+  - patch: |
+      - op: replace
+        path: /spec/externalName
+        value: "REPLACE_WITH_VM_IP"
+    target:
+      kind: Service
+      name: postgres-service
   # Patch ingress host for dev
   - patch: |
       - op: replace

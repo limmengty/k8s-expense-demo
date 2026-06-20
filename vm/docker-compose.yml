@@ -1,0 +1,121 @@
+version: "3.9"
+
+# ============================================================
+# Stateful services — runs on a dedicated DigitalOcean Droplet
+# (2 vCPU / 4 GB RAM minimum)
+#
+# Services hosted here:
+#   - Keycloak 26   → https://keycloak.limmengty.com
+#   - PostgreSQL 16 (Keycloak DB) — internal only, port not exposed
+#   - PostgreSQL 16 (expense-api DB) — accessible from K8s cluster
+#   - Nginx         — reverse proxy + TLS termination via certbot
+# ============================================================
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  keycloak-postgres-data:
+  expense-postgres-data:
+  nginx-certs:
+  nginx-www:
+
+services:
+
+  # ── Keycloak DB ────────────────────────────────────────────
+  keycloak-postgres:
+    image: postgres:16-alpine
+    container_name: keycloak-postgres
+    restart: unless-stopped
+    networks:
+      - internal
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+    volumes:
+      - keycloak-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Keycloak ───────────────────────────────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: keycloak
+    restart: unless-stopped
+    networks:
+      - internal
+    depends_on:
+      keycloak-postgres:
+        condition: service_healthy
+    command: ["start", "--http-enabled=true", "--hostname-strict=false"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_PROXY_HEADERS: xforwarded
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME: keycloak.limmengty.com
+      KC_HOSTNAME_STRICT: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/realms/master || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ── expense-api DB ─────────────────────────────────────────
+  # Accessible from K8s cluster via VM's public IP on port 5432
+  expense-postgres:
+    image: postgres:16-alpine
+    container_name: expense-postgres
+    restart: unless-stopped
+    networks:
+      - internal
+    ports:
+      - "5432:5432"        # Exposed to K8s cluster — restrict via firewall to cluster CIDR only
+    environment:
+      POSTGRES_DB: expense_db
+      POSTGRES_USER: expense_user
+      POSTGRES_PASSWORD: ${EXPENSE_DB_PASSWORD}
+    volumes:
+      - expense-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U expense_user -d expense_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Nginx reverse proxy ────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    networks:
+      - internal
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/keycloak.conf:/etc/nginx/conf.d/keycloak.conf:ro
+      - nginx-certs:/etc/letsencrypt
+      - nginx-www:/var/www/certbot
+    depends_on:
+      - keycloak
+
+  # ── Certbot — auto-renew TLS certs ─────────────────────────
+  certbot:
+    image: certbot/certbot:latest
+    container_name: certbot
+    restart: unless-stopped
+    volumes:
+      - nginx-certs:/etc/letsencrypt
+      - nginx-www:/var/www/certbot
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"

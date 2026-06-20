@@ -37,14 +37,15 @@ spec:
     - ports:
         - port: 53
           protocol: UDP
-    # Allow outbound to postgres
-    - to:
-        - podSelector:
-            matchLabels:
-              app.kubernetes.io/name: postgres
-      ports:
+    # Allow outbound to external VM PostgreSQL (ExternalName service resolves to VM IP)
+    - ports:
         - port: 5432
-    # Allow outbound to Keycloak (HTTPS)
+          protocol: TCP
+    # Allow outbound to Keycloak and any HTTPS (VM-hosted, no in-cluster pod restriction)
     - ports:
         - port: 443
+          protocol: TCP
+    # Allow outbound to Keycloak HTTP (internal VM port, proxied by nginx)
+    - ports:
+        - port: 80
           protocol: TCP

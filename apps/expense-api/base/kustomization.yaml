@@ -18,6 +18,4 @@ resources:
   - hpa.yaml
   - pdb.yaml
   - networkpolicy.yaml
-  - postgres-pvc.yaml
-  - postgres-deployment.yaml
   - postgres-service.yaml

@@ -1,7 +1,9 @@
 ---
 # ============================================================
 # demok8s / apps/expense-api/base/postgres-service.yaml
-# PostgreSQL internal ClusterIP service
+# ExternalName service — routes postgres-service DNS to the
+# external VM that hosts expense-api's PostgreSQL.
+# VM_IP is patched per environment via overlay.
 # ============================================================
 apiVersion: v1
 kind: Service
@@ -12,11 +14,9 @@ metadata:
     app.kubernetes.io/name: postgres
     app.kubernetes.io/component: database
 spec:
-  selector:
-    app.kubernetes.io/name: postgres
+  type: ExternalName
+  externalName: REPLACE_WITH_VM_IP   # patched by overlay
   ports:
     - name: postgres
       protocol: TCP
       port: 5432
-      targetPort: postgres
-  type: ClusterIP

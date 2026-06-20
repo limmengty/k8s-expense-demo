@@ -54,8 +54,6 @@ spec:
       kind: HorizontalPodAutoscaler
     - group: "policy"
       kind: PodDisruptionBudget
-    - group: ""
-      kind: PersistentVolumeClaim
 
   # Prevent committing raw Secret manifests — use Sealed Secrets / ESO
   namespaceResourceBlacklist:
