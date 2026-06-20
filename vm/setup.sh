@@ -47,36 +47,18 @@ ufw allow from 10.0.0.0/8 to any port 5432
 ufw --force enable
 
 echo "==> Getting initial TLS certificate for ${DOMAIN}..."
-mkdir -p /var/www/certbot /etc/letsencrypt
+mkdir -p /etc/letsencrypt
 
-# Temporary nginx to answer HTTP-01 challenge (mounts webroot so it can serve challenge files)
-docker run --rm -d --name nginx-temp \
-  -p 80:80 \
-  -v /var/www/certbot:/var/www/certbot \
-  nginx:alpine sh -c 'mkdir -p /var/www/certbot && nginx -g "daemon off;" &
-cat > /etc/nginx/conf.d/default.conf << EOF
-server {
-  listen 80;
-  location /.well-known/acme-challenge/ { root /var/www/certbot; }
-  location / { return 200 "ok"; }
-}
-EOF
-nginx -s reload; wait'
-
-sleep 3
-
+# Use standalone mode — certbot runs its own HTTP server on port 80
 docker run --rm \
+  -p 80:80 \
   -v /etc/letsencrypt:/etc/letsencrypt \
-  -v /var/www/certbot:/var/www/certbot \
   certbot/certbot certonly \
-    --webroot \
-    --webroot-path /var/www/certbot \
+    --standalone \
     -d "${DOMAIN}" \
     --email "${EMAIL}" \
     --agree-tos \
     --non-interactive
-
-docker stop nginx-temp 2>/dev/null || true
 
 echo "==> Starting all services..."
 docker compose up -d
