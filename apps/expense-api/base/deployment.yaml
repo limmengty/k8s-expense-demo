@@ -73,6 +73,12 @@ spec:
                 name: expense-api-configmap
             - secretRef:
                 name: expense-api-secret
+          env:
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: expense-api-secret
+                  key: DB_PASSWORD
 
           resources:
             requests:

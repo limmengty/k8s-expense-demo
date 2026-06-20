@@ -18,7 +18,7 @@ spec:
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:26.0
-          args: ["start", "--optimized", "--http-enabled=true", "--hostname-strict=false"]
+          args: ["start", "--http-enabled=true", "--hostname-strict=false"]
           ports:
             - containerPort: 8080
           env:
