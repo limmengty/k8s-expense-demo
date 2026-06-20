@@ -5,10 +5,11 @@ version: "3.9"
 # (2 vCPU / 4 GB RAM minimum)
 #
 # Services hosted here:
-#   - Keycloak 26   → https://keycloak.limmengty.com
-#   - PostgreSQL 16 (Keycloak DB) — internal only, port not exposed
-#   - PostgreSQL 16 (expense-api DB) — accessible from K8s cluster
-#   - Nginx         — reverse proxy + TLS termination via certbot
+#   - Keycloak 26        → https://keycloak.limmengty.com
+#   - PostgreSQL 16      (Keycloak DB — internal only)
+#   - PostgreSQL 16      (expense-api DB — port 5432 open to K8s cluster)
+#   - keycloak-config-cli (auto-imports expense realm on first start)
+#   - Nginx              (reverse proxy + TLS via certbot)
 # ============================================================
 
 networks:
@@ -68,11 +69,31 @@ services:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/realms/master || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 5
+      retries: 10
       start_period: 90s
 
+  # ── Realm auto-import ─────────────────────────────────────
+  # Runs once after Keycloak is healthy, imports expense-realm.yml
+  keycloak-config-cli:
+    image: adorsys/keycloak-config-cli:latest-26.0.0
+    container_name: keycloak-config-cli
+    restart: on-failure
+    networks:
+      - internal
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_USER: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KEYCLOAK_CONFIG_CLI_IMPORT: /config/expense-realm.yml
+      IMPORT_VAR_SUBSTITUTION_ENABLED: "true"
+    volumes:
+      - ./keycloak/expense-realm.yml:/config/expense-realm.yml:ro
+
   # ── expense-api DB ─────────────────────────────────────────
-  # Accessible from K8s cluster via VM's public IP on port 5432
+  # Port 5432 open to K8s cluster — restrict via firewall (ufw in setup.sh)
   expense-postgres:
     image: postgres:16-alpine
     container_name: expense-postgres
@@ -80,15 +101,15 @@ services:
     networks:
       - internal
     ports:
-      - "5432:5432"        # Exposed to K8s cluster — restrict via firewall to cluster CIDR only
+      - "5432:5432"
     environment:
       POSTGRES_DB: expense_db
-      POSTGRES_USER: expense_user
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${EXPENSE_DB_PASSWORD}
     volumes:
       - expense-postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U expense_user -d expense_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d expense_db"]
       interval: 10s
       timeout: 5s
       retries: 5

@@ -11,16 +11,18 @@ metadata:
   labels:
     app.kubernetes.io/name: expense-api
 data:
-  # Spring Boot datasource (auto-configuration keys)
+  # Spring Boot datasource
   SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres-service:5432/expense_db"
-  SPRING_DATASOURCE_USERNAME: "expense_user"
+  SPRING_DATASOURCE_USERNAME: "postgres"
   SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
   SPRING_JPA_DATABASE_PLATFORM: "org.hibernate.dialect.PostgreSQLDialect"
-  # Legacy keys kept for compatibility
+  # Legacy keys (expense-api reads these directly)
   DATABASE_URL: "jdbc:postgresql://postgres-service:5432/expense_db"
-  DATABASE_USERNAME: "expense_user"
+  DATABASE_USERNAME: "postgres"
+  # Keycloak / Spring Security OAuth2
   KEYCLOAK_ISSUER_URI: "https://keycloak.limmengty.com/realms/expense"
   KEYCLOAK_SERVER_URL: "https://keycloak.limmengty.com"
   KEYCLOAK_REALM: "expense"
   KEYCLOAK_CLIENT_ID: "expense-api"
+  SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: "https://keycloak.limmengty.com/realms/expense"
   JAVA_OPTS: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"

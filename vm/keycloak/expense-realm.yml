@@ -1,0 +1,83 @@
+realm: expense
+enabled: true
+sslRequired: none
+registrationAllowed: false
+loginWithEmailAllowed: true
+duplicateEmailsAllowed: false
+resetPasswordAllowed: true
+editUsernameAllowed: false
+bruteForceProtected: true
+accessTokenLifespan: 36000
+accessTokenLifespanForImplicitFlow: 900
+ssoSessionIdleTimeout: 1800
+ssoSessionMaxLifespan: 36000
+offlineSessionIdleTimeout: 2592000
+accessCodeLifespan: 60
+accessCodeLifespanUserAction: 300
+accessCodeLifespanLogin: 1800
+
+roles:
+  realm:
+    - name: ROLE_USER
+      description: Standard user role for expense management
+      composite: false
+    - name: ROLE_ADMIN
+      description: Administrator role with elevated privileges
+      composite: false
+
+clients:
+  - clientId: expense-api
+    enabled: true
+    clientAuthenticatorType: client-secret
+    secret: ${EXPENSE_API_CLIENT_SECRET}
+    serviceAccountsEnabled: true
+    authorizationServicesEnabled: false
+    standardFlowEnabled: true
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: true
+    publicClient: false
+    protocol: openid-connect
+    fullScopeAllowed: true
+    redirectUris:
+      - https://dev-expense-api.limmengty.com/*
+      - https://expense-api.limmengty.com/*
+      - http://localhost:8080/*
+    webOrigins:
+      - https://dev-expense-api.limmengty.com
+      - https://expense-api.limmengty.com
+      - http://localhost:8080
+    defaultClientScopes:
+      - basic
+      - web-origins
+      - profile
+      - roles
+      - email
+    optionalClientScopes:
+      - address
+      - phone
+
+  - clientId: expense-ui
+    enabled: true
+    clientAuthenticatorType: client-secret
+    secret: ${EXPENSE_UI_CLIENT_SECRET}
+    serviceAccountsEnabled: false
+    standardFlowEnabled: true
+    implicitFlowEnabled: false
+    directAccessGrantsEnabled: true
+    publicClient: false
+    protocol: openid-connect
+    fullScopeAllowed: true
+    redirectUris:
+      - https://dev-expense.limmengty.com/*
+      - https://expense.limmengty.com/*
+      - http://localhost:3000/*
+    webOrigins:
+      - https://dev-expense.limmengty.com
+      - https://expense.limmengty.com
+      - http://localhost:3000
+    defaultClientScopes:
+      - basic
+      - profile
+      - email
+
+users: []
