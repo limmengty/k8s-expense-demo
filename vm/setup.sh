@@ -49,6 +49,10 @@ ufw --force enable
 echo "==> Getting initial TLS certificate for ${DOMAIN}..."
 mkdir -p /etc/letsencrypt
 
+# Kill anything holding port 80 before certbot standalone takes it
+docker rm -f nginx-temp 2>/dev/null || true
+fuser -k 80/tcp 2>/dev/null || true
+
 # Use standalone mode — certbot runs its own HTTP server on port 80
 docker run --rm \
   -p 80:80 \
